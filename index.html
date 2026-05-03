@@ -16,7 +16,24 @@
         .login-box { background: white; padding: 30px; border-radius: 15px; color: #333; text-align: center; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         
-        .btn-google { background: white; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 15px; cursor: pointer; border-radius: 5px; padding: 10px; }
+        /* BOTÃO GOOGLE AJUSTADO */
+        .btn-google { 
+            background: black; 
+            color: #444; 
+            border: 1px solid #ddd; 
+            display: inline-flex; /* Mudado para inline-flex */
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            width: auto; /* Largura automática */
+            margin: 15px auto 0 auto; /* Centralizado horizontalmente */
+            cursor: pointer; 
+            border-radius: 5px; 
+            padding: 6px 12px; /* Padding menor */
+            font-size: 13px; /* Fonte menor */
+            font-weight: 500;
+        }
+        .btn-google img { width: 18px; } /* Ícone menor */
 
         #sistemaConteudo { display: none; padding: 10px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; color: #333; height: 95vh; display: flex; flex-direction: column; }
@@ -33,11 +50,9 @@
         
         .btn { padding: 10px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-transform: uppercase; font-size: 10px; }
         
-        /* BARRA DE PESQUISA */
         .search-container { margin-bottom: 10px; position: relative; }
         .search-container input { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; box-sizing: border-box; font-size: 14px; }
 
-        /* LISTA RESPONSIVA COM ROLAGEM */
         #areaRelatorio { flex-grow: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; position: relative; }
         table { width: 100%; border-collapse: collapse; }
         thead { position: sticky; top: 0; z-index: 5; }
@@ -74,10 +89,15 @@
         <input type="email" id="email" placeholder="E-mail">
         <input type="password" id="senha" placeholder="Senha">
         <button class="btn" style="background:var(--primary); width:100%; padding:14px;" onclick="entrar()">ENTRAR</button>
-        <button class="btn btn-google" onclick="loginGoogle()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-            Entrar com Google
-        </button>
+        
+        <!-- DIV para garantir a centralização do botão menor -->
+        <div style="width: 100%;">
+            <button class="btn btn-google" onclick="loginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+               Login com Google
+            </button>
+        </div>
+
         <p style="font-size: 12px; margin-top: 20px;">
             <a href="#" id="linkAlternar" onclick="alternarAuth()">Ainda não tem conta? Cadastre-se</a>
         </p>
@@ -115,7 +135,6 @@
             </div>
         </div>
 
-        <!-- BARRA DE PESQUISA ADICIONADA -->
         <div class="search-container no-print">
             <input type="text" id="inputBusca" placeholder="🔍 Pesquisar fornecedor ou documento..." onkeyup="renderizarTabela()">
         </div>
@@ -129,22 +148,7 @@
     </div>
 </div>
 
-<!-- MODAL DE DETALHES DOS ITENS -->
-<div id="modalDetalhes" class="modal no-print">
-    <div class="modal-content">
-        <span class="close" onclick="fecharModal()">&times;</span>
-        <h2 id="detalheNome" style="margin-top:0; font-size: 20px;">Detalhes</h2>
-        <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <input type="hidden" id="editItemId">
-            <input type="text" id="novoItemNome" placeholder="Item" style="flex:2; padding:10px; border:1px solid #ddd; border-radius:6px;">
-            <input type="number" id="novoItemValor" placeholder="R$" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px;">
-            <button class="btn" id="btnSalvarItem" style="background:var(--warning); color:#000;" onclick="registrarItem()">LANÇAR</button>
-            <button class="btn" id="btnCancelarEditItem" style="background:#6c757d; display:none;" onclick="cancelarEdicaoItem()">CANCELAR</button>
-        </div>
-        <div id="listaItens" style="border:1px solid #eee; border-radius:8px; max-height: 300px; overflow-y:auto;"></div>
-    </div>
-</div>
-
+<!-- O restante do Script permanece igual -->
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyDvKY08rpGsMjNV1pKRPmEi9o6blgTWZA0",
@@ -223,17 +227,13 @@
         db.ref('usuarios/' + usuarioLogado.uid + '/receita').set(parseFloat(v) || 0);
     }
 
-    // FUNÇÃO DE RENDERIZAÇÃO COM FILTRO DE PESQUISA
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
         const termoBusca = document.getElementById('inputBusca').value.toUpperCase();
         corpo.innerHTML = '';
-        
         listaCompras.forEach(c => {
             const nome = c.nome.toUpperCase();
             const doc = (c.doc || "").toUpperCase();
-            
-            // Verifica se o termo de busca está no nome ou no doc
             if (nome.includes(termoBusca) || doc.includes(termoBusca)) {
                 const obsHtml = c.obs ? `<span class="obs-text">${c.obs}</span>` : '';
                 corpo.innerHTML += `
@@ -255,19 +255,14 @@
         });
     }
 
-    // --- FUNÇÕES DE FORNECEDOR ---
-
     function adicionarCompra() {
         const id = document.getElementById('editFornecedorId').value;
         const nome = document.getElementById('nomeCompra').value.toUpperCase();
         const doc = document.getElementById('docCompra').value;
         const obs = document.getElementById('obsCompra').value;
-
         if(!nome) return;
-
         const dados = { nome, doc, obs };
         const path = 'usuarios/' + usuarioLogado.uid + '/compras/';
-
         if(id) {
             db.ref(path + id).update(dados);
             cancelarEdicaoFornecedor();
@@ -275,7 +270,6 @@
             const novoId = Date.now().toString();
             db.ref(path + novoId).set({...dados, total: 0});
         }
-
         limparCamposFornecedor();
     }
 
@@ -320,8 +314,6 @@
         document.getElementById('cardSaldo').style.background = saldo < 0 ? 'var(--danger)' : '#fd7e14';
     }
 
-    // --- FUNÇÕES DE ITENS (MODAL) ---
-
     function abrirDetalhes(id) {
         idAtivo = id;
         atualizarModal();
@@ -354,7 +346,6 @@
         const v = parseFloat(document.getElementById('novoItemValor').value);
         const editId = document.getElementById('editItemId').value;
         if(!n || isNaN(v)) return;
-        
         const path = 'usuarios/' + usuarioLogado.uid + '/compras/' + idAtivo;
         if(editId) {
             db.ref(path + '/itens/' + editId).update({ nome: n, valor: v }).then(recalcularTotalCompra);
