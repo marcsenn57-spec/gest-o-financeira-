@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOLCLARAGABI - Gestão</title>
+    <title>Gestão Financeira</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -15,8 +15,9 @@
         #telaLogin { height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--dark); }
         .login-box { background: white; padding: 30px; border-radius: 15px; color: #333; text-align: center; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-      .btn-google { 
-            background: black; 
+        
+         .btn-google { 
+            background: #4d4d4d; 
             color: #444; 
             border: 1px solid #ddd; 
             display: inline-flex; /* Mudado para inline-flex */
@@ -36,6 +37,20 @@
         #sistemaConteudo { display: none; padding: 10px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; color: #333; height: 95vh; display: flex; flex-direction: column; }
         
+        /* Estilo para o Nome Editável */
+        .nome-usuario-editavel {
+            margin: 0;
+            font-size: 18px;
+            cursor: pointer;
+            border-bottom: 1px dashed transparent;
+            display: inline-block;
+            color: #333;
+        }
+        .nome-usuario-editavel:hover {
+            border-bottom: 1px dashed var(--primary);
+            color: var(--primary);
+        }
+
         .dashboard-geral { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
         .card-geral { flex: 1; min-width: 150px; padding: 10px; border-radius: 10px; color: white; text-align: center; }
         .bg-receita { background: #20c997; }
@@ -48,11 +63,9 @@
         
         .btn { padding: 10px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-transform: uppercase; font-size: 10px; }
         
-        /* BARRA DE PESQUISA */
         .search-container { margin-bottom: 10px; position: relative; }
         .search-container input { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; box-sizing: border-box; font-size: 14px; }
 
-        /* LISTA RESPONSIVA COM ROLAGEM */
         #areaRelatorio { flex-grow: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; position: relative; }
         table { width: 100%; border-collapse: collapse; }
         thead { position: sticky; top: 0; z-index: 5; }
@@ -89,10 +102,14 @@
         <input type="email" id="email" placeholder="E-mail">
         <input type="password" id="senha" placeholder="Senha">
         <button class="btn" style="background:var(--primary); width:100%; padding:14px;" onclick="entrar()">ENTRAR</button>
-        <button class="btn btn-google" onclick="loginGoogle()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-            Entrar com Google
-        </button>
+        
+        <div style="width: 100%;">
+            <button class="btn btn-google" onclick="loginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Entrar com conta Google
+            </button>
+        </div>
+
         <p style="font-size: 12px; margin-top: 20px;">
             <a href="#" id="linkAlternar" onclick="alternarAuth()">Ainda não tem conta? Cadastre-se</a>
         </p>
@@ -103,7 +120,8 @@
     <div class="container">
         <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap:10px;">
             <div>
-                <h2 style="margin:0; font-size: 18px;">Marcelo Sena</h2>
+                <h2 id="nomeUsuarioDisplay" class="nome-usuario-editavel" onclick="editarNomeUsuario()" title="Clique para alterar seu nome">Usuário</h2>
+                <br>
                 <small id="userEmail" style="color: #666;"></small>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
@@ -130,7 +148,6 @@
             </div>
         </div>
 
-        <!-- BARRA DE PESQUISA ADICIONADA -->
         <div class="search-container no-print">
             <input type="text" id="inputBusca" placeholder="🔍 Pesquisar fornecedor ou documento..." onkeyup="renderizarTabela()">
         </div>
@@ -144,7 +161,6 @@
     </div>
 </div>
 
-<!-- MODAL DE DETALHES DOS ITENS -->
 <div id="modalDetalhes" class="modal no-print">
     <div class="modal-content">
         <span class="close" onclick="fecharModal()">&times;</span>
@@ -180,6 +196,7 @@
     let modoCadastro = false;
     let listaCompras = [];
     let idAtivo = null;
+    let nomePersonalizado = "";
 
     function loginGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -219,12 +236,20 @@
 
     function carregarDados() {
         const path = 'usuarios/' + usuarioLogado.uid;
+        
+        // Carregar Nome Personalizado
+        db.ref(path + '/perfil/nome').on('value', snap => {
+            nomePersonalizado = snap.val() || usuarioLogado.displayName || "Usuário";
+            document.getElementById('nomeUsuarioDisplay').innerText = nomePersonalizado;
+        });
+
         db.ref(path + '/receita').on('value', snap => {
             const r = snap.val() || 0;
             document.getElementById('valorReceitaBase').value = r;
             document.getElementById('displayReceita').innerText = r.toFixed(2);
             calcularTudo();
         });
+
         db.ref(path + '/compras').on('value', snap => {
             const data = snap.val();
             listaCompras = data ? Object.entries(data).map(([key, value]) => ({...value, id: key})) : [];
@@ -234,21 +259,25 @@
         });
     }
 
+    // --- FUNÇÃO PARA EDITAR NOME ---
+    function editarNomeUsuario() {
+        const novoNome = prompt("Como deseja ser chamado?", nomePersonalizado);
+        if (novoNome !== null && novoNome.trim() !== "") {
+            db.ref('usuarios/' + usuarioLogado.uid + '/perfil/nome').set(novoNome.trim());
+        }
+    }
+
     function salvarReceita(v) {
         db.ref('usuarios/' + usuarioLogado.uid + '/receita').set(parseFloat(v) || 0);
     }
 
-    // FUNÇÃO DE RENDERIZAÇÃO COM FILTRO DE PESQUISA
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
         const termoBusca = document.getElementById('inputBusca').value.toUpperCase();
         corpo.innerHTML = '';
-        
         listaCompras.forEach(c => {
             const nome = c.nome.toUpperCase();
             const doc = (c.doc || "").toUpperCase();
-            
-            // Verifica se o termo de busca está no nome ou no doc
             if (nome.includes(termoBusca) || doc.includes(termoBusca)) {
                 const obsHtml = c.obs ? `<span class="obs-text">${c.obs}</span>` : '';
                 corpo.innerHTML += `
@@ -270,19 +299,14 @@
         });
     }
 
-    // --- FUNÇÕES DE FORNECEDOR ---
-
     function adicionarCompra() {
         const id = document.getElementById('editFornecedorId').value;
         const nome = document.getElementById('nomeCompra').value.toUpperCase();
         const doc = document.getElementById('docCompra').value;
         const obs = document.getElementById('obsCompra').value;
-
         if(!nome) return;
-
         const dados = { nome, doc, obs };
         const path = 'usuarios/' + usuarioLogado.uid + '/compras/';
-
         if(id) {
             db.ref(path + id).update(dados);
             cancelarEdicaoFornecedor();
@@ -290,7 +314,6 @@
             const novoId = Date.now().toString();
             db.ref(path + novoId).set({...dados, total: 0});
         }
-
         limparCamposFornecedor();
     }
 
@@ -335,8 +358,6 @@
         document.getElementById('cardSaldo').style.background = saldo < 0 ? 'var(--danger)' : '#fd7e14';
     }
 
-    // --- FUNÇÕES DE ITENS (MODAL) ---
-
     function abrirDetalhes(id) {
         idAtivo = id;
         atualizarModal();
@@ -369,7 +390,6 @@
         const v = parseFloat(document.getElementById('novoItemValor').value);
         const editId = document.getElementById('editItemId').value;
         if(!n || isNaN(v)) return;
-        
         const path = 'usuarios/' + usuarioLogado.uid + '/compras/' + idAtivo;
         if(editId) {
             db.ref(path + '/itens/' + editId).update({ nome: n, valor: v }).then(recalcularTotalCompra);
@@ -422,14 +442,17 @@
         listaCompras.forEach(c => totalD += (c.total || 0));
         const saldo = receita - totalD;
         const janelaImpressao = window.open('', '', 'width=900,height=700');
+        
+        // Usa o nomePersonalizado no relatório
         let html = `<html><head><title>Extrato</title><style>body{font-family:Arial;padding:20px} table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid #ccc;padding:10px;text-align:left} .neg{color:red}</style></head><body>`;
-        html += `<h2>EXTRATO FINANCEIRO - Marcelo Sena</h2><p>Data: ${dataAtual}</p>`;
+        html += `<h2>EXTRATO FINANCEIRO - ${nomePersonalizado.toUpperCase()}</h2><p>Data: ${dataAtual}</p>`;
         html += `<table><thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>`;
         html += `<tr><td>RECEITA INICIAL</td><td>CRÉDITO</td><td>R$ ${receita.toFixed(2)}</td></tr>`;
         listaCompras.forEach(c => {
             html += `<tr><td>${c.nome} ${c.doc ? '['+c.doc+']' : ''}</td><td>DÉBITO</td><td class="neg">- R$ ${c.total.toFixed(2)}</td></tr>`;
         });
         html += `</tbody></table><h3>SALDO FINAL: R$ ${saldo.toFixed(2)}</h3></body></html>`;
+        
         janelaImpressao.document.write(html);
         janelaImpressao.document.close();
         janelaImpressao.print();
